@@ -1,11 +1,72 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, TextInput, ScrollView } from 'react-native';
+import { useState, useRef } from 'react';
+import useAbortedFetch from './hooks/useAbortedFetch';
+
+const URL = 'https://rata.digitraffic.fi/api/v1/trains/latest/'
 
 export default function App() {
+  const [search, setSearch] = useState('')
+  const urlRef = useRef()
+  const {data,error,loading} = useAbortedFetch(urlRef.current)
+
+  const searchTrain = (text) => {
+    setSearch(text)
+    const address = URL + text
+    urlRef.current = address
+    console.log(address)
+  }
+
+  const trainInfo = () => {
+    if (loading){
+      return(<Text>Ladataan...</Text>)
+    }
+
+
+    try {
+      console.log("runningCurrently value:", data.runningCurrently);
+      console.log(data)
+      return(
+        (data !== null && data[0].trainNumber !== null) &&
+
+        <View>
+          <Text style={{paddingBottom: 8}}>Liikkeellä: {data[0].runningCurrently === true ? 'Kyllä' : 'Ei'}</Text>
+          {
+            data[0].runningCurrently === true 
+            &&
+            <ScrollView style={styles.trainContainer}>
+              {
+                data[0].timeTableRows.map((stop, index) =>(
+                  <Text key={index}>{stop.type === "ARRIVAL" ? 'Saapuu klo:' : 'Lähtee klo:'} {new Date(stop.scheduledTime).toLocaleTimeString("fi-FI")} Asemalta: {stop.stationShortCode}</Text>
+                ))
+              }
+            </ScrollView>
+          }
+        </View>
+        
+        )
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
   return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
+    <View>
+      <View>
+        <Text style={{paddingTop: 30, fontSize: 20}}>Junat</Text>
+        <Text>Hae junaa sen numerolla. Esim IC68 on 68</Text>
+        <Text>Huom! Näytetään vain oletettu saapumis- tai lähtöaika</Text>
+        <TextInput
+          style={styles.field}
+          placeholder='Hae junaa...'
+          value={search}
+          onChangeText={text => searchTrain(text)}
+        />
+      </View>
+      <View>
+        {
+          trainInfo()
+        }
+      </View>
     </View>
   );
 }
@@ -17,4 +78,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  field: {
+    padding: 8,
+    borderColor: "#000000",
+    borderWidth: 1,
+  },
+  trainContainer: {
+    width: "100%", 
+    maxHeight: 500
+  }
 });
