@@ -8,6 +8,7 @@ export default function App() {
   const [search, setSearch] = useState('')
   const urlRef = useRef()
   const {data,error,loading} = useAbortedFetch(urlRef.current)
+  const [trainStyle, setTrainStyle] = useState('')
 
   const searchTrain = (text) => {
     setSearch(text)
@@ -23,8 +24,6 @@ export default function App() {
 
 
     try {
-      console.log("runningCurrently value:", data.runningCurrently);
-      console.log(data)
       return(
         (data !== null && data[0].trainNumber !== null) &&
 
@@ -36,7 +35,7 @@ export default function App() {
             <ScrollView style={styles.trainContainer}>
               {
                 data[0].timeTableRows.map((stop, index) =>(
-                  <Text key={index}>{stop.type === "ARRIVAL" ? 'Saapuu klo:' : 'Lähtee klo:'} {new Date(stop.scheduledTime).toLocaleTimeString("fi-FI")} Asemalta: {stop.stationShortCode}</Text>
+                  <Text style={stop.type === "ARRIVAL" ? styles.trainArrives : styles.trainLeaves} key={index}>{stop.type === "ARRIVAL" ? 'Saapuu klo:' : 'Lähtee klo:'} {new Date(stop.scheduledTime).toLocaleTimeString("fi-FI")} Asema: {stop.stationShortCode}</Text>
                 ))
               }
             </ScrollView>
@@ -83,8 +82,20 @@ const styles = StyleSheet.create({
     borderColor: "#000000",
     borderWidth: 1,
   },
+  trainArrives: {
+    padding: 8,
+    borderColor: "#000000",
+    backgroundColor: '#a5ff87',
+    borderWidth: 1,
+  },
+  trainLeaves: {
+    padding: 8,
+    borderColor: "#000000",
+    backgroundColor: '#ff8b87',
+    borderWidth: 1,
+  },
   trainContainer: {
-    width: "100%", 
-    maxHeight: 500
+    width: "100%",
+    maxHeight: 500,
   }
 });
